@@ -1416,11 +1416,8 @@ struct TextGenerationScheduler::Impl {
         request->logprob_decoder.DecodeToken(*values, [&](auto token) {
           return runner_pool->runner().Decode(std::span(&token, 1));
         });
-    const auto bytes = decoded.StorageBytes();
-    if (bytes > request->max_output_bytes - request->generated_output_bytes)
-      throw TextGenerationError(TextGenerationErrorCode::kOutputLimit,
-                                "logprobs exceed output byte limit");
-    request->generated_output_bytes += bytes;
+    // Metadata is bounded by the token budget, not the text byte limit: at
+    // top_logprobs 20 that limit would end a default request near 600 tokens.
     request->result.logprobs.push_back(std::move(decoded));
     return &request->result.logprobs.back();
   }

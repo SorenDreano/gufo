@@ -3062,14 +3062,17 @@ void TestTokenLogprobs() {
     gufo::sampling::SamplingConfig config;
     config.logprobs = 0;
     bool failed = false;
+    std::size_t scored = 0;
     try {
-      (void)scheduler->Submit({1, 10}, 2, config, {}, stream).Wait();
+      scored = scheduler->Submit({1, 10}, 2, config, {}, stream)
+                   .Wait()
+                   .logprobs.size();
     } catch (const TextGenerationError& error) {
-      failed =
-          error.code() == (stream ? TextGenerationErrorCode::kOutputBackpressure
-                                  : TextGenerationErrorCode::kOutputLimit);
+      failed = error.code() == TextGenerationErrorCode::kOutputBackpressure;
     }
-    Expect(failed, "metadata counts toward output and backpressure limits");
+    Expect(stream ? failed : scored == 2,
+           stream ? "metadata counts toward backpressure limits"
+                  : "metadata does not count toward the text byte limit");
   }
 }
 

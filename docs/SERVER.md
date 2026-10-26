@@ -1005,8 +1005,9 @@ when their text is hidden, so concatenating metadata tokens need not reproduce
 visible content.
 Existing usage accounting is unchanged.
 
-Collection adds vocabulary transfers and CPU reduction only when requested;
-metadata counts toward output and streaming buffer limits. Prompt logprobs,
+Collection adds vocabulary transfers and CPU reduction only when requested.
+Metadata counts toward streaming buffer limits but not `--max-output-bytes`,
+which bounds generated text; `max_tokens` bounds its size. Prompt logprobs,
 full-vocabulary output and token-ID extensions are not supported. For example:
 
 ```json

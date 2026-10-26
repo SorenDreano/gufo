@@ -69,6 +69,16 @@ def check_logprobs(client, model, checks, completion_frame):
                             assert 1 <= len(alternatives) <= count + 1
                 assert seen >= baseline["usage"]["completion_tokens"], (name, seen, baseline["usage"])
 
+    # Twenty candidates per token once exceeded the default 1 MiB text byte
+    # limit near 560 tokens.
+    long = client.completions.create(model=model, prompt="Count upward, one number per line:\n1\n",
+                                     max_tokens=1200, temperature=0, logprobs=20,
+                                     extra_body={"ignore_eos": True, "cache_prompt": False}).model_dump()
+    checks["logprobs_completion_k20_long"] = {"usage": long["usage"],
+                                              "finish_reason": long["choices"][0]["finish_reason"]}
+    assert long["usage"]["completion_tokens"] == 1200, long["usage"]
+    assert len(long["choices"][0]["logprobs"]["tokens"]) == 1200
+
 
 def check_responses_logprobs(client, model, checks):
     """Validate Responses parts, SSE deltas/done events, and SDK accumulation."""
